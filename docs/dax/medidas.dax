@@ -1,0 +1,397 @@
+// =====================================================================
+//  MEDIDAS DAX - Analise de Precos de Combustiveis (ANP)
+// =====================================================================
+//
+//  Como usar:
+//    1. Crie uma tabela vazia chamada  _Medidas
+//       (Inserir dados > tabela vazia > renomear > ocultar a coluna)
+//    2. Cole cada medida abaixo com  Nova medida
+//    3. Atribua a pasta de exibicao indicada em  [Pasta: ...]
+//
+//  Pre-requisitos no modelo:
+//    - Dim_Calendario marcada como TABELA DE DATAS  (coluna Data)
+//    - Relacionamentos 1:N, direcao unica, das Dim_* para Fato_Coleta
+//    - Fato_Evento_Preco ligada a Dim_Calendario[Data] e Dim_Produto[SK_Produto]
+//
+//  Convencoes:
+//    - DIVIDE em vez de "/" - divisao por zero devolve BLANK, nao erro
+//    - VAR/RETURN em toda medida com mais de uma etapa
+//    - Guardas de amostra minima: medida sem base suficiente devolve
+//      BLANK em vez de um numero que parece valido mas nao e
+// =====================================================================
+
+
+// ---------------------------------------------------------------------
+//  1. BASE                                            [Pasta: 01 Base]
+// ---------------------------------------------------------------------
+
+Coletas =
+COUNTROWS ( Fato_Coleta )
+
+
+Postos Distintos =
+DISTINCTCOUNT ( Fato_Coleta[SK_Revenda] )
+
+
+Municipios Distintos =
+DISTINCTCOUNT ( Fato_Coleta[SK_Municipio] )
+
+
+// ---------------------------------------------------------------------
+//  2. PRECO                                          [Pasta: 02 Preco]
+// ---------------------------------------------------------------------
+
+// Mediana, nao media. Precos de bomba tem cauda longa a direita (postos
+// de rodovia e de aeroporto) que desloca a media para cima e nao
+// representa o que o consumidor tipico paga.
+//
+// A guarda de 10 coletas evita que uma celula com 2 observacoes apareca
+// no relatorio com a mesma aparencia de uma com 2.000.
+
+Preco Mediano =
+VAR MinimoColetas = 10
+VAR N = COUNTROWS ( Fato_Coleta )
+RETURN
+    IF ( N >= MinimoColetas, MEDIAN ( Fato_Coleta[Preco] ) )
+
+
+Preco Medio =
+VAR MinimoColetas = 10
+VAR N = COUNTROWS ( Fato_Coleta )
+RETURN
+    IF ( N >= MinimoColetas, AVERAGE ( Fato_Coleta[Preco] ) )
+
+
+// A diferenca entre media e mediana mede a assimetria da distribuicao.
+// Positiva = poucos postos muito caros puxando a media.
+Assimetria Media-Mediana =
+[Preco Medio] - [Preco Mediano]
+
+
+Preco Minimo =
+MIN ( Fato_Coleta[Preco] )
+
+
+Preco Maximo =
+MAX ( Fato_Coleta[Preco] )
+
+
+// ---------------------------------------------------------------------
+//  3. DISPERSAO                                   [Pasta: 03 Dispersao]
+// ---------------------------------------------------------------------
+
+// P90-P10 em vez de max-min: ignora os dois extremos e descreve a faixa
+// que 80% do mercado pratica.
+//
+// GUARDA CRITICA - 30 postos. Sem ela, Roraima (15 postos, todos em Boa
+// Vista, praticamente no mesmo preco) apareceria como o mercado mais
+// homogeneo do Brasil ao lado de Sao Paulo, que tem milhares de postos.
+// Nao e comparavel e o relatorio nao deve fingir que e.
+
+Amplitude P90-P10 =
+VAR MinimoPostos = 30
+VAR Postos = DISTINCTCOUNT ( Fato_Coleta[SK_Revenda] )
+VAR P90 = PERCENTILE.INC ( Fato_Coleta[Preco], 0.90 )
+VAR P10 = PERCENTILE.INC ( Fato_Coleta[Preco], 0.10 )
+RETURN
+    IF ( Postos >= MinimoPostos, P90 - P10 )
+
+
+Coeficiente de Variacao =
+VAR MinimoPostos = 30
+VAR Postos = DISTINCTCOUNT ( Fato_Coleta[SK_Revenda] )
+VAR Desvio = STDEV.P ( Fato_Coleta[Preco] )
+VAR Media = AVERAGE ( Fato_Coleta[Preco] )
+RETURN
+    IF ( Postos >= MinimoPostos, DIVIDE ( Desvio, Media ) )
+
+
+// Quanto o consumidor economiza procurando o posto mais barato.
+Economia Potencial =
+VAR MinimoPostos = 30
+VAR Postos = DISTINCTCOUNT ( Fato_Coleta[SK_Revenda] )
+VAR P50 = MEDIAN ( Fato_Coleta[Preco] )
+VAR P10 = PERCENTILE.INC ( Fato_Coleta[Preco], 0.10 )
+RETURN
+    IF ( Postos >= MinimoPostos, P50 - P10 )
+
+
+// Rotulo de aviso para exibir ao lado de celulas pouco confiaveis.
+Alerta Amostra =
+IF ( [Postos Distintos] < 30, "Amostra pequena", BLANK () )
+
+
+// ---------------------------------------------------------------------
+//  4. TEMPO                                          [Pasta: 04 Tempo]
+// ---------------------------------------------------------------------
+//
+//  A coleta da ANP se concentra em segunda e terca (420 mil coletas na
+//  segunda contra 27 mil na sexta). Por isso a comparacao e de 7 em 7
+//  dias: comparar dias isolados mediria o calendario de campo da
+//  agencia, nao o mercado.
+
+Preco Mediano Semana Anterior =
+CALCULATE ( [Preco Mediano], DATEADD ( Dim_Calendario[Data], -7, DAY ) )
+
+
+Variacao Semanal RS =
+VAR Atual = [Preco Mediano]
+VAR Anterior = [Preco Mediano Semana Anterior]
+RETURN
+    IF ( NOT ISBLANK ( Atual ) && NOT ISBLANK ( Anterior ), Atual - Anterior )
+
+
+Variacao Semanal % =
+DIVIDE ( [Variacao Semanal RS], [Preco Mediano Semana Anterior] )
+
+
+Preco Mediano 12M Atras =
+CALCULATE ( [Preco Mediano], DATEADD ( Dim_Calendario[Data], -12, MONTH ) )
+
+
+Variacao 12M % =
+DIVIDE (
+    [Preco Mediano] - [Preco Mediano 12M Atras],
+    [Preco Mediano 12M Atras]
+)
+
+
+// Mediana de toda a janela de 28 dias - nao a media de 4 medianas
+// semanais. Mais robusta quando uma semana tem poucas coletas.
+Preco Mediano 28d =
+VAR UltimaData = MAX ( Dim_Calendario[Data] )
+RETURN
+    CALCULATE (
+        [Preco Mediano],
+        DATESINPERIOD ( Dim_Calendario[Data], UltimaData, -28, DAY )
+    )
+
+
+// Primeira e ultima semana DENTRO do intervalo escolhido nos filtros.
+// ALLSELECTED e o que faz a medida respeitar o slicer em vez do
+// contexto da linha do grafico.
+Preco no Inicio do Periodo =
+VAR PrimeiraSemana =
+    CALCULATE ( MIN ( Dim_Calendario[InicioSemana] ), ALLSELECTED ( Dim_Calendario ) )
+RETURN
+    CALCULATE (
+        [Preco Mediano],
+        ALLSELECTED ( Dim_Calendario ),
+        Dim_Calendario[InicioSemana] = PrimeiraSemana
+    )
+
+
+Preco no Fim do Periodo =
+VAR UltimaSemana =
+    CALCULATE ( MAX ( Dim_Calendario[InicioSemana] ), ALLSELECTED ( Dim_Calendario ) )
+RETURN
+    CALCULATE (
+        [Preco Mediano],
+        ALLSELECTED ( Dim_Calendario ),
+        Dim_Calendario[InicioSemana] = UltimaSemana
+    )
+
+
+Variacao no Periodo RS =
+VAR Ini = [Preco no Inicio do Periodo]
+VAR Fim = [Preco no Fim do Periodo]
+RETURN
+    IF ( NOT ISBLANK ( Ini ) && NOT ISBLANK ( Fim ), Fim - Ini )
+
+
+Variacao no Periodo % =
+DIVIDE ( [Variacao no Periodo RS], [Preco no Inicio do Periodo] )
+
+
+// ---------------------------------------------------------------------
+//  5. TRANSMISSAO DE PRECO                     [Pasta: 05 Transmissao]
+// ---------------------------------------------------------------------
+//
+//  Pergunta central do projeto: quando o preco se move no pais, quanto
+//  chega a cada estado?
+//
+//  100% = o estado acompanhou o movimento nacional integralmente
+//  <100% = repassou menos (absorveu parte na margem)
+//  >100% = amplificou o movimento
+
+Variacao Nacional RS =
+CALCULATE ( [Variacao no Periodo RS], REMOVEFILTERS ( Dim_Geografia ) )
+
+
+Transmissao vs Nacional % =
+VAR Local = [Variacao no Periodo RS]
+VAR Nacional = [Variacao Nacional RS]
+RETURN
+    IF (
+        NOT ISBLANK ( Local ) && ABS ( Nacional ) > 0.01,
+        DIVIDE ( Local, Nacional )
+    )
+
+
+// Diferenca em centavos entre o movimento local e o nacional.
+Descolamento vs Nacional RS =
+VAR Local = [Variacao no Periodo RS]
+VAR Nacional = [Variacao Nacional RS]
+RETURN
+    IF ( NOT ISBLANK ( Local ) && NOT ISBLANK ( Nacional ), Local - Nacional )
+
+
+// Premio ou desconto do estado em relacao a mediana nacional, no mesmo
+// recorte de tempo e produto.
+Premio vs Nacional % =
+VAR Local = [Preco Mediano]
+VAR Nacional = CALCULATE ( [Preco Mediano], REMOVEFILTERS ( Dim_Geografia ) )
+RETURN
+    DIVIDE ( Local - Nacional, Nacional )
+
+
+// ---------------------------------------------------------------------
+//  6. PARIDADE ETANOL / GASOLINA                  [Pasta: 06 Paridade]
+// ---------------------------------------------------------------------
+//
+//  O etanol rende cerca de 30% menos por litro. A regra pratica: abaixo
+//  de 70% da gasolina ele compensa; acima, nao.
+//
+//  REMOVEFILTERS(Dim_Produto) e essencial - a paridade compara dois
+//  produtos, entao nao pode obedecer a um filtro de produto. Sem isso a
+//  medida zeraria ao selecionar "Gasolina" no slicer.
+
+Preco Mediano Gasolina =
+CALCULATE (
+    [Preco Mediano],
+    REMOVEFILTERS ( Dim_Produto ),
+    Dim_Produto[NomeProduto] = "Gasolina"
+)
+
+
+Preco Mediano Etanol =
+CALCULATE (
+    [Preco Mediano],
+    REMOVEFILTERS ( Dim_Produto ),
+    Dim_Produto[NomeProduto] = "Etanol"
+)
+
+
+Paridade Etanol/Gasolina =
+DIVIDE ( [Preco Mediano Etanol], [Preco Mediano Gasolina] )
+
+
+Etanol Compensa =
+VAR Paridade = [Paridade Etanol/Gasolina]
+RETURN
+    IF ( NOT ISBLANK ( Paridade ), IF ( Paridade < 0.70, 1, 0 ) )
+
+
+// Percentual das semanas do periodo em que o etanol foi a melhor
+// escolha. FILTER sobre VALUES gera contexto de linha; a medida dentro
+// dele sofre transicao de contexto automaticamente.
+% Semanas Etanol Compensa =
+VAR SemanasComDados =
+    FILTER (
+        VALUES ( Dim_Calendario[InicioSemana] ),
+        NOT ISBLANK ( [Paridade Etanol/Gasolina] )
+    )
+VAR SemanasFavoraveis =
+    FILTER ( SemanasComDados, [Paridade Etanol/Gasolina] < 0.70 )
+RETURN
+    DIVIDE ( COUNTROWS ( SemanasFavoraveis ), COUNTROWS ( SemanasComDados ) )
+
+
+// Quanto o motorista economiza (ou perde) por litro equivalente ao
+// abastecer com etanol, ja corrigido pelo menor rendimento.
+Vantagem Etanol RS por km =
+VAR Etanol = [Preco Mediano Etanol]
+VAR Gasolina = [Preco Mediano Gasolina]
+VAR EtanolCorrigido = DIVIDE ( Etanol, 0.70 )
+RETURN
+    IF (
+        NOT ISBLANK ( Etanol ) && NOT ISBLANK ( Gasolina ),
+        Gasolina - EtanolCorrigido
+    )
+
+
+// ---------------------------------------------------------------------
+//  7. EVENTOS DE PRECO                             [Pasta: 07 Eventos]
+// ---------------------------------------------------------------------
+
+N Eventos de Preco =
+COUNTROWS ( Fato_Evento_Preco )
+
+
+Maior Alta RS =
+CALCULATE ( MAX ( Fato_Evento_Preco[DeltaRS] ), Fato_Evento_Preco[Direcao] = "Alta" )
+
+
+Maior Baixa RS =
+CALCULATE ( MIN ( Fato_Evento_Preco[DeltaRS] ), Fato_Evento_Preco[Direcao] = "Baixa" )
+
+
+Data do Ultimo Evento =
+CALCULATE ( MAX ( Fato_Evento_Preco[Data] ), ALLSELECTED ( Dim_Calendario ) )
+
+
+// Soma dos saltos detectados - quanto do movimento total do periodo
+// aconteceu em eventos, e nao em deriva gradual.
+Impacto Acumulado dos Eventos RS =
+SUMX ( Fato_Evento_Preco, Fato_Evento_Preco[DeltaRS] )
+
+
+% do Movimento Explicado por Eventos =
+DIVIDE ( [Impacto Acumulado dos Eventos RS], [Variacao no Periodo RS] )
+
+
+// ---------------------------------------------------------------------
+//  8. RANKING E APOIO AO RELATORIO                   [Pasta: 08 Apoio]
+// ---------------------------------------------------------------------
+
+Ranking UF por Preco =
+IF (
+    NOT ISBLANK ( [Preco Mediano] ),
+    RANKX ( ALLSELECTED ( Dim_Geografia[UF] ), [Preco Mediano], , DESC, DENSE )
+)
+
+
+Ranking UF por Dispersao =
+IF (
+    NOT ISBLANK ( [Amplitude P90-P10] ),
+    RANKX ( ALLSELECTED ( Dim_Geografia[UF] ), [Amplitude P90-P10], , DESC, DENSE )
+)
+
+
+// Titulo que descreve o recorte ativo. Amarrar ao titulo do visual em
+// Formato > Titulo > fx > Com base no campo.
+Titulo Dinamico =
+VAR Produto = SELECTEDVALUE ( Dim_Produto[NomeProduto], "Todos os combustiveis" )
+VAR Ini = MIN ( Dim_Calendario[Data] )
+VAR Fim = MAX ( Dim_Calendario[Data] )
+VAR Regiao = SELECTEDVALUE ( Dim_Geografia[NomeRegiao], "Brasil" )
+RETURN
+    Produto & " - " & Regiao & " - "
+        & FORMAT ( Ini, "mmm/yy" ) & " a " & FORMAT ( Fim, "mmm/yy" )
+
+
+// Subtitulo com o tamanho da amostra por tras do numero exibido.
+// Transparencia sobre a base e parte do resultado, nao rodape.
+Base da Amostra =
+VAR N = [Coletas]
+VAR Postos = [Postos Distintos]
+RETURN
+    IF (
+        N > 0,
+        FORMAT ( N, "#,0" ) & " coletas em "
+            & FORMAT ( Postos, "#,0" ) & " postos"
+    )
+
+
+// Rotulo do sentido da variacao, para formatacao condicional sem
+// depender apenas de cor (acessibilidade).
+Sentido da Variacao =
+VAR V = [Variacao no Periodo RS]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( V ), BLANK (),
+        V > 0.01, "Alta",
+        V < -0.01, "Baixa",
+        "Estavel"
+    )
