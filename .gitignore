@@ -10,3 +10,7 @@ outputs/modelo.tmsl
 
 # Exportacao intermediaria de medidas (regenerada pelo step10)
 outputs/medidas.json
+
+# backup gerado ao injetar o relatorio
+*.pbix.bak
+*.pbix.tmp
