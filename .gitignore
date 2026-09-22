@@ -14,3 +14,6 @@ outputs/medidas.json
 # backup gerado ao injetar o relatorio
 *.pbix.bak
 *.pbix.tmp
+
+# o .pbix entra no repo so depois de verificado (ver README)
+/Precos-Combustiveis-ANP.pbix
