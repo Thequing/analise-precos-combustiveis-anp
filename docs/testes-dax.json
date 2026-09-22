@@ -1,0 +1,286 @@
+{
+  "gerado_de": "src/step05_validate.py",
+  "base_coletas": 1053221,
+  "testes": [
+    {
+      "nome": "Coletas",
+      "grupo": "Contagens",
+      "dax": "EVALUATE ROW(\"v\", [Coletas])",
+      "esperado": 1053221,
+      "tolerancia": 0,
+      "nota": ""
+    },
+    {
+      "nome": "Postos Distintos",
+      "grupo": "Contagens",
+      "dax": "EVALUATE ROW(\"v\", [Postos Distintos])",
+      "esperado": 11151,
+      "tolerancia": 0,
+      "nota": ""
+    },
+    {
+      "nome": "Municipios Distintos",
+      "grupo": "Contagens",
+      "dax": "EVALUATE ROW(\"v\", [Municipios Distintos])",
+      "esperado": 419,
+      "tolerancia": 0,
+      "nota": ""
+    },
+    {
+      "nome": "Preco Mediano · Diesel S10",
+      "grupo": "Preco",
+      "dax": "EVALUATE ROW(\"v\", CALCULATE([Preco Mediano], KEEPFILTERS(Dim_Produto[NomeProduto] = \"Diesel S10\")))",
+      "esperado": 6.28,
+      "tolerancia": 0.0015,
+      "nota": ""
+    },
+    {
+      "nome": "Preco Mediano · Etanol",
+      "grupo": "Preco",
+      "dax": "EVALUATE ROW(\"v\", CALCULATE([Preco Mediano], KEEPFILTERS(Dim_Produto[NomeProduto] = \"Etanol\")))",
+      "esperado": 4.43,
+      "tolerancia": 0.0015,
+      "nota": ""
+    },
+    {
+      "nome": "Preco Mediano · Gasolina",
+      "grupo": "Preco",
+      "dax": "EVALUATE ROW(\"v\", CALCULATE([Preco Mediano], KEEPFILTERS(Dim_Produto[NomeProduto] = \"Gasolina\")))",
+      "esperado": 6.29,
+      "tolerancia": 0.0015,
+      "nota": ""
+    },
+    {
+      "nome": "Amplitude P90-P10 · Diesel S10",
+      "grupo": "Dispersao",
+      "dax": "EVALUATE ROW(\"v\", CALCULATE([Amplitude P90-P10], KEEPFILTERS(Dim_Produto[NomeProduto] = \"Diesel S10\")))",
+      "esperado": 1.4000000000000004,
+      "tolerancia": 0.0015,
+      "nota": ""
+    },
+    {
+      "nome": "Amplitude P90-P10 · Etanol",
+      "grupo": "Dispersao",
+      "dax": "EVALUATE ROW(\"v\", CALCULATE([Amplitude P90-P10], KEEPFILTERS(Dim_Produto[NomeProduto] = \"Etanol\")))",
+      "esperado": 1.2999999999999998,
+      "tolerancia": 0.0015,
+      "nota": ""
+    },
+    {
+      "nome": "Amplitude P90-P10 · Gasolina",
+      "grupo": "Dispersao",
+      "dax": "EVALUATE ROW(\"v\", CALCULATE([Amplitude P90-P10], KEEPFILTERS(Dim_Produto[NomeProduto] = \"Gasolina\")))",
+      "esperado": 1.0999999999999996,
+      "tolerancia": 0.0015,
+      "nota": ""
+    },
+    {
+      "nome": "Guarda amostra · RR (15 postos)",
+      "grupo": "Guarda",
+      "dax": "EVALUATE ROW(\"v\", CALCULATE([Amplitude P90-P10], KEEPFILTERS(Dim_Geografia[UF] = \"RR\"), KEEPFILTERS(Dim_Produto[NomeProduto] = \"Gasolina\"), Dim_Calendario[InicioSemana] >= DATE(2026, 7, 6)))",
+      "esperado": null,
+      "tolerancia": 0.0015,
+      "nota": "deve ser BLANK"
+    },
+    {
+      "nome": "Guarda amostra · AC (15 postos)",
+      "grupo": "Guarda",
+      "dax": "EVALUATE ROW(\"v\", CALCULATE([Amplitude P90-P10], KEEPFILTERS(Dim_Geografia[UF] = \"AC\"), KEEPFILTERS(Dim_Produto[NomeProduto] = \"Gasolina\"), Dim_Calendario[InicioSemana] >= DATE(2026, 7, 6)))",
+      "esperado": null,
+      "tolerancia": 0.0015,
+      "nota": "deve ser BLANK"
+    },
+    {
+      "nome": "Guarda amostra · SP (1706 postos)",
+      "grupo": "Guarda",
+      "dax": "EVALUATE ROW(\"v\", CALCULATE([Amplitude P90-P10], KEEPFILTERS(Dim_Geografia[UF] = \"SP\"), KEEPFILTERS(Dim_Produto[NomeProduto] = \"Gasolina\"), Dim_Calendario[InicioSemana] >= DATE(2026, 7, 6)))",
+      "esperado": 0.7999999999999998,
+      "tolerancia": 0.0015,
+      "nota": ""
+    },
+    {
+      "nome": "Paridade · SP",
+      "grupo": "Paridade",
+      "dax": "EVALUATE ROW(\"v\", CALCULATE([Paridade Etanol/Gasolina], KEEPFILTERS(Dim_Geografia[UF] = \"SP\")))",
+      "esperado": 0.6551724137931035,
+      "tolerancia": 0.005,
+      "nota": ""
+    },
+    {
+      "nome": "Paridade · MS",
+      "grupo": "Paridade",
+      "dax": "EVALUATE ROW(\"v\", CALCULATE([Paridade Etanol/Gasolina], KEEPFILTERS(Dim_Geografia[UF] = \"MS\")))",
+      "esperado": 0.6422893481717011,
+      "tolerancia": 0.005,
+      "nota": ""
+    },
+    {
+      "nome": "Paridade · AP",
+      "grupo": "Paridade",
+      "dax": "EVALUATE ROW(\"v\", CALCULATE([Paridade Etanol/Gasolina], KEEPFILTERS(Dim_Geografia[UF] = \"AP\")))",
+      "esperado": 0.8853820598006645,
+      "tolerancia": 0.005,
+      "nota": ""
+    },
+    {
+      "nome": "Paridade · RS",
+      "grupo": "Paridade",
+      "dax": "EVALUATE ROW(\"v\", CALCULATE([Paridade Etanol/Gasolina], KEEPFILTERS(Dim_Geografia[UF] = \"RS\")))",
+      "esperado": 0.783653846153846,
+      "tolerancia": 0.005,
+      "nota": ""
+    },
+    {
+      "nome": "Paridade · Brasil",
+      "grupo": "Paridade",
+      "dax": "EVALUATE ROW(\"v\", [Paridade Etanol/Gasolina])",
+      "esperado": 0.7042925278219395,
+      "tolerancia": 0.005,
+      "nota": ""
+    },
+    {
+      "nome": "Paridade invariante · filtro Gasolina",
+      "grupo": "Paridade",
+      "dax": "EVALUATE ROW(\"v\", CALCULATE([Paridade Etanol/Gasolina], KEEPFILTERS(Dim_Produto[NomeProduto] = \"Gasolina\")))",
+      "esperado": 0.7042925278219395,
+      "tolerancia": 0.005,
+      "nota": "REMOVEFILTERS(Dim_Produto) deve anular o filtro de produto"
+    },
+    {
+      "nome": "Paridade invariante · filtro Etanol",
+      "grupo": "Paridade",
+      "dax": "EVALUATE ROW(\"v\", CALCULATE([Paridade Etanol/Gasolina], KEEPFILTERS(Dim_Produto[NomeProduto] = \"Etanol\")))",
+      "esperado": 0.7042925278219395,
+      "tolerancia": 0.005,
+      "nota": "REMOVEFILTERS(Dim_Produto) deve anular o filtro de produto"
+    },
+    {
+      "nome": "Paridade invariante · filtro Diesel S10",
+      "grupo": "Paridade",
+      "dax": "EVALUATE ROW(\"v\", CALCULATE([Paridade Etanol/Gasolina], KEEPFILTERS(Dim_Produto[NomeProduto] = \"Diesel S10\")))",
+      "esperado": 0.7042925278219395,
+      "tolerancia": 0.005,
+      "nota": "REMOVEFILTERS(Dim_Produto) deve anular o filtro de produto"
+    },
+    {
+      "nome": "Variacao no Periodo RS · Diesel S10",
+      "grupo": "Variacao",
+      "dax": "EVALUATE ROW(\"v\", CALCULATE([Variacao no Periodo RS], KEEPFILTERS(Dim_Produto[NomeProduto] = \"Diesel S10\")))",
+      "esperado": 0.8999999999999995,
+      "tolerancia": 0.0015,
+      "nota": ""
+    },
+    {
+      "nome": "Variacao no Periodo RS · Etanol",
+      "grupo": "Variacao",
+      "dax": "EVALUATE ROW(\"v\", CALCULATE([Variacao no Periodo RS], KEEPFILTERS(Dim_Produto[NomeProduto] = \"Etanol\")))",
+      "esperado": -0.11000000000000032,
+      "tolerancia": 0.0015,
+      "nota": ""
+    },
+    {
+      "nome": "Variacao no Periodo RS · Gasolina",
+      "grupo": "Variacao",
+      "dax": "EVALUATE ROW(\"v\", CALCULATE([Variacao no Periodo RS], KEEPFILTERS(Dim_Produto[NomeProduto] = \"Gasolina\")))",
+      "esperado": 0.41999999999999993,
+      "tolerancia": 0.0015,
+      "nota": ""
+    },
+    {
+      "nome": "Variacao no Periodo RS · SP Gasolina",
+      "grupo": "Variacao",
+      "dax": "EVALUATE ROW(\"v\", CALCULATE([Variacao no Periodo RS], KEEPFILTERS(Dim_Geografia[UF] = \"SP\"), KEEPFILTERS(Dim_Produto[NomeProduto] = \"Gasolina\")))",
+      "esperado": 0.5,
+      "tolerancia": 0.0015,
+      "nota": ""
+    },
+    {
+      "nome": "Transmissao vs Nacional % · SP",
+      "grupo": "Transmissao",
+      "dax": "EVALUATE ROW(\"v\", CALCULATE([Transmissao vs Nacional %], KEEPFILTERS(Dim_Geografia[UF] = \"SP\"), KEEPFILTERS(Dim_Produto[NomeProduto] = \"Gasolina\")))",
+      "esperado": 1.1904761904761907,
+      "tolerancia": 0.005,
+      "nota": ""
+    },
+    {
+      "nome": "Variacao no Periodo RS · RJ Gasolina",
+      "grupo": "Variacao",
+      "dax": "EVALUATE ROW(\"v\", CALCULATE([Variacao no Periodo RS], KEEPFILTERS(Dim_Geografia[UF] = \"RJ\"), KEEPFILTERS(Dim_Produto[NomeProduto] = \"Gasolina\")))",
+      "esperado": 0.5,
+      "tolerancia": 0.0015,
+      "nota": ""
+    },
+    {
+      "nome": "Transmissao vs Nacional % · RJ",
+      "grupo": "Transmissao",
+      "dax": "EVALUATE ROW(\"v\", CALCULATE([Transmissao vs Nacional %], KEEPFILTERS(Dim_Geografia[UF] = \"RJ\"), KEEPFILTERS(Dim_Produto[NomeProduto] = \"Gasolina\")))",
+      "esperado": 1.1904761904761907,
+      "tolerancia": 0.005,
+      "nota": ""
+    },
+    {
+      "nome": "Variacao no Periodo RS · AM Gasolina",
+      "grupo": "Variacao",
+      "dax": "EVALUATE ROW(\"v\", CALCULATE([Variacao no Periodo RS], KEEPFILTERS(Dim_Geografia[UF] = \"AM\"), KEEPFILTERS(Dim_Produto[NomeProduto] = \"Gasolina\")))",
+      "esperado": 0.40000000000000036,
+      "tolerancia": 0.0015,
+      "nota": ""
+    },
+    {
+      "nome": "Transmissao vs Nacional % · AM",
+      "grupo": "Transmissao",
+      "dax": "EVALUATE ROW(\"v\", CALCULATE([Transmissao vs Nacional %], KEEPFILTERS(Dim_Geografia[UF] = \"AM\"), KEEPFILTERS(Dim_Produto[NomeProduto] = \"Gasolina\")))",
+      "esperado": 0.9523809523809534,
+      "tolerancia": 0.005,
+      "nota": ""
+    },
+    {
+      "nome": "Variacao no Periodo RS · MS Gasolina",
+      "grupo": "Variacao",
+      "dax": "EVALUATE ROW(\"v\", CALCULATE([Variacao no Periodo RS], KEEPFILTERS(Dim_Geografia[UF] = \"MS\"), KEEPFILTERS(Dim_Produto[NomeProduto] = \"Gasolina\")))",
+      "esperado": 0.2649999999999997,
+      "tolerancia": 0.0015,
+      "nota": ""
+    },
+    {
+      "nome": "Transmissao vs Nacional % · MS",
+      "grupo": "Transmissao",
+      "dax": "EVALUATE ROW(\"v\", CALCULATE([Transmissao vs Nacional %], KEEPFILTERS(Dim_Geografia[UF] = \"MS\"), KEEPFILTERS(Dim_Produto[NomeProduto] = \"Gasolina\")))",
+      "esperado": 0.6309523809523803,
+      "tolerancia": 0.005,
+      "nota": ""
+    },
+    {
+      "nome": "N Eventos de Preco",
+      "grupo": "Eventos",
+      "dax": "EVALUATE ROW(\"v\", [N Eventos de Preco])",
+      "esperado": 12,
+      "tolerancia": 0,
+      "nota": ""
+    },
+    {
+      "nome": "N Eventos · Diesel S10",
+      "grupo": "Eventos",
+      "dax": "EVALUATE ROW(\"v\", CALCULATE([N Eventos de Preco], KEEPFILTERS(Dim_Produto[NomeProduto] = \"Diesel S10\")))",
+      "esperado": 4,
+      "tolerancia": 0,
+      "nota": ""
+    },
+    {
+      "nome": "N Eventos · Etanol",
+      "grupo": "Eventos",
+      "dax": "EVALUATE ROW(\"v\", CALCULATE([N Eventos de Preco], KEEPFILTERS(Dim_Produto[NomeProduto] = \"Etanol\")))",
+      "esperado": 2,
+      "tolerancia": 0,
+      "nota": ""
+    },
+    {
+      "nome": "N Eventos · Gasolina",
+      "grupo": "Eventos",
+      "dax": "EVALUATE ROW(\"v\", CALCULATE([N Eventos de Preco], KEEPFILTERS(Dim_Produto[NomeProduto] = \"Gasolina\")))",
+      "esperado": 6,
+      "tolerancia": 0,
+      "nota": ""
+    }
+  ]
+}

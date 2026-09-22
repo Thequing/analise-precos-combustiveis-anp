@@ -1,0 +1,32 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/report/1.0.0/schema.json",
+  "themeCollection": {
+    "customTheme": {
+      "name": "ANP Precos - Claro"
+    }
+  },
+  "layoutOptimization": "None",
+  "resourcePackages": [
+    {
+      "name": "SharedResources",
+      "type": "SharedResources",
+      "items": [
+        {
+          "name": "BaseThemeANP",
+          "path": "BaseTheme.json",
+          "type": "BaseTheme"
+        }
+      ]
+    }
+  ],
+  "sections": [
+    {
+      "name": "472fb408-4da6-4b03-a8ca-858a59d9398a",
+      "displayName": "Visao Geral",
+      "width": 1280,
+      "height": 720,
+      "displayOption": "FitToPage",
+      "visualContainers": []
+    }
+  ]
+}

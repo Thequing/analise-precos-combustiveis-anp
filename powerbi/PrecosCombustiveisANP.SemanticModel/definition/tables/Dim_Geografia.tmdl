@@ -1,0 +1,50 @@
+table Dim_Geografia
+	lineageTag: 7616a8be-c101-40be-be22-52479eefae3e
+
+	column SK_Municipio
+		dataType: int64
+		isHidden
+		lineageTag: d451751c-2ad7-4046-a49c-c176d053ed4b
+		summarizeBy: none
+		sourceColumn: SK_Municipio
+
+	column Regiao
+		dataType: string
+		isHidden
+		lineageTag: 7ebb7067-c07d-42da-b33d-585034c29a93
+		summarizeBy: none
+		sourceColumn: Regiao
+
+	column UF
+		dataType: string
+		lineageTag: c2624f58-e390-4ae4-b9ce-ac16427755d3
+		summarizeBy: none
+		sourceColumn: UF
+
+	column Municipio
+		dataType: string
+		lineageTag: 2d23dc43-7b52-4717-a0e6-5deef3ad6ed5
+		summarizeBy: none
+		sourceColumn: Municipio
+
+	column NomeRegiao
+		dataType: string
+		lineageTag: fcf17b58-c7f4-42af-ac2e-84d148537ec6
+		summarizeBy: none
+		sourceColumn: NomeRegiao
+
+	column UF_Municipio
+		dataType: string
+		lineageTag: b69c9ae2-6dd5-4739-91c6-11cc0e88b005
+		summarizeBy: none
+		sourceColumn: UF_Municipio
+
+	partition Dim_Geografia = m
+		mode: import
+		source =
+				let
+				    Origem = Csv.Document(File.Contents(pCaminhoDados & "\Dim_Geografia.csv"), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    Promovido = Table.PromoteHeaders(Origem, [PromoteAllScalars=true]),
+				    Tipos = Table.TransformColumnTypes(Promovido, {{"SK_Municipio", Int64.Type},{"Regiao", type text},{"UF", type text},{"Municipio", type text},{"NomeRegiao", type text},{"UF_Municipio", type text}}, "en-US")
+				in
+				    Tipos

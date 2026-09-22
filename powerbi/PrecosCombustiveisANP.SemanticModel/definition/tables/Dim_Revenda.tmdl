@@ -1,0 +1,32 @@
+table Dim_Revenda
+	lineageTag: 04c890ae-1458-4a15-91c9-578184d04410
+
+	column SK_Revenda
+		dataType: int64
+		isHidden
+		lineageTag: 27b5fa0b-2b12-4ff8-abd8-fcd22f65bb46
+		summarizeBy: none
+		sourceColumn: SK_Revenda
+
+	column ID_Revenda
+		dataType: string
+		isHidden
+		lineageTag: cb403f4f-61f8-41c5-b884-c6d1db6a7951
+		summarizeBy: none
+		sourceColumn: ID_Revenda
+
+	column NomeRevenda
+		dataType: string
+		lineageTag: d735b0d9-fa51-4123-9efd-3552fd1bca56
+		summarizeBy: none
+		sourceColumn: NomeRevenda
+
+	partition Dim_Revenda = m
+		mode: import
+		source =
+				let
+				    Origem = Csv.Document(File.Contents(pCaminhoDados & "\Dim_Revenda.csv"), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    Promovido = Table.PromoteHeaders(Origem, [PromoteAllScalars=true]),
+				    Tipos = Table.TransformColumnTypes(Promovido, {{"SK_Revenda", Int64.Type},{"ID_Revenda", type text},{"NomeRevenda", type text}}, "en-US")
+				in
+				    Tipos

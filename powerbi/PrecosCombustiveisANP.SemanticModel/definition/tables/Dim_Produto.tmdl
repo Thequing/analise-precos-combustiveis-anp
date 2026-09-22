@@ -1,0 +1,44 @@
+table Dim_Produto
+	lineageTag: 04f6b8e8-074c-4f25-b140-bc419498b744
+
+	column SK_Produto
+		dataType: int64
+		isHidden
+		lineageTag: 36af55f1-d314-4ef7-b651-d2aa53d2085d
+		summarizeBy: none
+		sourceColumn: SK_Produto
+
+	column Produto
+		dataType: string
+		isHidden
+		lineageTag: 59c703cc-9fd1-4cdb-a67f-10f38fff91ca
+		summarizeBy: none
+		sourceColumn: Produto
+
+	column NomeProduto
+		dataType: string
+		lineageTag: 2f2575a3-97c4-4939-ada2-07fe24a7b5a4
+		summarizeBy: none
+		sourceColumn: NomeProduto
+
+	column Origem
+		dataType: string
+		lineageTag: ec1dfbed-b755-473a-8ca0-d996315b6fda
+		summarizeBy: none
+		sourceColumn: Origem
+
+	column Unidade
+		dataType: string
+		lineageTag: 2d34a6ae-f0a3-4cf3-8ed5-a2467907e41f
+		summarizeBy: none
+		sourceColumn: Unidade
+
+	partition Dim_Produto = m
+		mode: import
+		source =
+				let
+				    Origem = Csv.Document(File.Contents(pCaminhoDados & "\Dim_Produto.csv"), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    Promovido = Table.PromoteHeaders(Origem, [PromoteAllScalars=true]),
+				    Tipos = Table.TransformColumnTypes(Promovido, {{"SK_Produto", Int64.Type},{"Produto", type text},{"NomeProduto", type text},{"Origem", type text},{"Unidade", type text}}, "en-US")
+				in
+				    Tipos

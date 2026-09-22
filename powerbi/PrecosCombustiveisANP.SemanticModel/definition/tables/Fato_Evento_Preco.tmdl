@@ -1,0 +1,71 @@
+table Fato_Evento_Preco
+	lineageTag: d41cd668-949d-4f00-a42a-329b6fff7395
+
+	column SK_Evento
+		dataType: int64
+		isHidden
+		lineageTag: 6951ba26-9c2f-46bc-a060-31e87e01e37c
+		summarizeBy: none
+		sourceColumn: SK_Evento
+
+	column Data
+		dataType: dateTime
+		lineageTag: 1760114e-3dac-40e7-bb16-d4c7a6f9ce7b
+		summarizeBy: none
+		sourceColumn: Data
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column SK_Produto
+		dataType: int64
+		isHidden
+		lineageTag: c41676cd-9dc3-4cea-a2ab-79137b6e7968
+		summarizeBy: none
+		sourceColumn: SK_Produto
+
+	column PrecoAntes
+		dataType: double
+		lineageTag: 6735c266-c367-4325-9c77-b445eaf9456e
+		summarizeBy: none
+		sourceColumn: PrecoAntes
+
+	column PrecoDepois
+		dataType: double
+		lineageTag: 69673a6a-3d98-4e4f-aece-7acf8b7aae72
+		summarizeBy: none
+		sourceColumn: PrecoDepois
+
+	column DeltaRS
+		dataType: double
+		lineageTag: 130920ae-ef62-4edf-badd-76e9b0813c8b
+		summarizeBy: none
+		sourceColumn: DeltaRS
+
+	column DeltaPct
+		dataType: double
+		lineageTag: 0de33822-6a2d-4da7-97f3-204b97da0af3
+		summarizeBy: none
+		sourceColumn: DeltaPct
+
+	column ZRobusto
+		dataType: double
+		lineageTag: 6c75d476-5e96-4403-aea8-8055cfbd363a
+		summarizeBy: none
+		sourceColumn: ZRobusto
+
+	column Direcao
+		dataType: string
+		lineageTag: 806bc094-7164-41a7-b002-cd74a06f077d
+		summarizeBy: none
+		sourceColumn: Direcao
+
+	partition Fato_Evento_Preco = m
+		mode: import
+		source =
+				let
+				    Origem = Csv.Document(File.Contents(pCaminhoDados & "\Fato_Evento_Preco.csv"), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    Promovido = Table.PromoteHeaders(Origem, [PromoteAllScalars=true]),
+				    Removido = Table.RemoveColumns(Promovido, {"NomeProduto"}),
+				    Tipos = Table.TransformColumnTypes(Removido, {{"SK_Evento", Int64.Type},{"Data", type date},{"SK_Produto", Int64.Type},{"PrecoAntes", type number},{"PrecoDepois", type number},{"DeltaRS", type number},{"DeltaPct", type number},{"ZRobusto", type number},{"Direcao", type text}}, "en-US")
+				in
+				    Tipos

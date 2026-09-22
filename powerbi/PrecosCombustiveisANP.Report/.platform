@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "PrecosCombustiveisANP"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "1661e732-7af4-4b89-9ebb-755df87be56f"
+  }
+}

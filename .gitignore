@@ -4,3 +4,6 @@ data/interim/
 __pycache__/
 *.pyc
 .venv/
+
+# Saidas geradas por instancia (o ID do banco muda a cada execucao)
+outputs/modelo.tmsl

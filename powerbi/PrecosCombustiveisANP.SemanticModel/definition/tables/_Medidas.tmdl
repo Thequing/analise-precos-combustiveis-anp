@@ -1,0 +1,384 @@
+table _Medidas
+	lineageTag: 16dbaa8a-c8dd-4a22-92fd-6afe07e85683
+
+	measure 'Coletas' =
+				COUNTROWS ( Fato_Coleta )
+		formatString: #,0
+		lineageTag: 0618e323-e476-4d14-ac18-f3ef4df78759
+		displayFolder: 01 Base
+
+	measure 'Postos Distintos' =
+				DISTINCTCOUNT ( Fato_Coleta[SK_Revenda] )
+		formatString: #,0
+		lineageTag: c62a7c01-8725-4db3-926d-387dc4a9dcee
+		displayFolder: 01 Base
+
+	measure 'Municipios Distintos' =
+				DISTINCTCOUNT ( Fato_Coleta[SK_Municipio] )
+		formatString: #,0
+		lineageTag: 391ce413-ed53-42ec-9232-1f19656882a0
+		displayFolder: 01 Base
+
+	measure 'Preco Mediano' =
+				VAR MinimoColetas = 10
+				VAR N = COUNTROWS ( Fato_Coleta )
+				RETURN
+				    IF ( N >= MinimoColetas, MEDIAN ( Fato_Coleta[Preco] ) )
+		formatString: "R$ "#,0.000
+		lineageTag: cac353cc-5e6d-434d-b0b5-fb87dcb2ac76
+		displayFolder: 02 Preco
+
+	measure 'Preco Medio' =
+				VAR MinimoColetas = 10
+				VAR N = COUNTROWS ( Fato_Coleta )
+				RETURN
+				    IF ( N >= MinimoColetas, AVERAGE ( Fato_Coleta[Preco] ) )
+		formatString: "R$ "#,0.000
+		lineageTag: 2a91dd36-d454-4bef-8c46-49228ab7e66d
+		displayFolder: 02 Preco
+
+	measure 'Assimetria Media-Mediana' =
+				[Preco Medio] - [Preco Mediano]
+		formatString: "R$ "#,0.000
+		lineageTag: c2dddedf-999b-4d17-a759-65c48b647d57
+		displayFolder: 02 Preco
+
+	measure 'Preco Minimo' =
+				MIN ( Fato_Coleta[Preco] )
+		formatString: "R$ "#,0.000
+		lineageTag: 9fac8a68-dc06-465e-b371-a7a9c0063c02
+		displayFolder: 02 Preco
+
+	measure 'Preco Maximo' =
+				MAX ( Fato_Coleta[Preco] )
+		formatString: "R$ "#,0.000
+		lineageTag: fe9da774-b555-4607-a19a-c8c0901c634d
+		displayFolder: 02 Preco
+
+	measure 'Amplitude P90-P10' =
+				VAR MinimoPostos = 30
+				VAR Postos = DISTINCTCOUNT ( Fato_Coleta[SK_Revenda] )
+				VAR P90 = PERCENTILE.INC ( Fato_Coleta[Preco], 0.90 )
+				VAR P10 = PERCENTILE.INC ( Fato_Coleta[Preco], 0.10 )
+				RETURN
+				    IF ( Postos >= MinimoPostos, P90 - P10 )
+		formatString: "R$ "#,0.000
+		lineageTag: cbec959b-fbf1-44cc-92cf-0b8fab7e29ab
+		displayFolder: 03 Dispersao
+
+	measure 'Coeficiente de Variacao' =
+				VAR MinimoPostos = 30
+				VAR Postos = DISTINCTCOUNT ( Fato_Coleta[SK_Revenda] )
+				VAR Desvio = STDEV.P ( Fato_Coleta[Preco] )
+				VAR Media = AVERAGE ( Fato_Coleta[Preco] )
+				RETURN
+				    IF ( Postos >= MinimoPostos, DIVIDE ( Desvio, Media ) )
+		formatString: 0.0%
+		lineageTag: a2628be0-8b2d-4915-b59f-6d83862a05f0
+		displayFolder: 03 Dispersao
+
+	measure 'Economia Potencial' =
+				VAR MinimoPostos = 30
+				VAR Postos = DISTINCTCOUNT ( Fato_Coleta[SK_Revenda] )
+				VAR P50 = MEDIAN ( Fato_Coleta[Preco] )
+				VAR P10 = PERCENTILE.INC ( Fato_Coleta[Preco], 0.10 )
+				RETURN
+				    IF ( Postos >= MinimoPostos, P50 - P10 )
+		formatString: "R$ "#,0.000
+		lineageTag: 962bfff5-7316-4108-a4b5-2493250b81f9
+		displayFolder: 03 Dispersao
+
+	measure 'Alerta Amostra' =
+				IF ( [Postos Distintos] < 30, "Amostra pequena", BLANK () )
+		lineageTag: f67ac2e0-b221-411a-87b6-7b88e0a36bf0
+		displayFolder: 03 Dispersao
+
+	measure 'Preco Mediano Semana Anterior' =
+				CALCULATE ( [Preco Mediano], DATEADD ( Dim_Calendario[Data], -7, DAY ) )
+		formatString: "R$ "#,0.000
+		lineageTag: 3a3baa26-0fe1-4d3c-bd83-8db3e478c659
+		displayFolder: 04 Tempo
+
+	measure 'Variacao Semanal RS' =
+				VAR Atual = [Preco Mediano]
+				VAR Anterior = [Preco Mediano Semana Anterior]
+				RETURN
+				    IF ( NOT ISBLANK ( Atual ) && NOT ISBLANK ( Anterior ), Atual - Anterior )
+		formatString: "R$ "#,0.000
+		lineageTag: 84c29fe3-16af-486b-9af6-fe36e48975ab
+		displayFolder: 04 Tempo
+
+	measure 'Variacao Semanal %' =
+				DIVIDE ( [Variacao Semanal RS], [Preco Mediano Semana Anterior] )
+		formatString: 0.0%
+		lineageTag: 8dd771b2-91ed-448e-b004-9b582094463f
+		displayFolder: 04 Tempo
+
+	measure 'Preco Mediano 12M Atras' =
+				CALCULATE ( [Preco Mediano], DATEADD ( Dim_Calendario[Data], -12, MONTH ) )
+		formatString: "R$ "#,0.000
+		lineageTag: cb61b543-ad0f-4ece-98a2-b650f7a6a77c
+		displayFolder: 04 Tempo
+
+	measure 'Variacao 12M %' =
+				DIVIDE (
+				    [Preco Mediano] - [Preco Mediano 12M Atras],
+				    [Preco Mediano 12M Atras]
+				)
+		formatString: 0.0%
+		lineageTag: c5f515cf-843e-417d-866f-49c67b2ac347
+		displayFolder: 04 Tempo
+
+	measure 'Preco Mediano 28d' =
+				VAR UltimaData = MAX ( Dim_Calendario[Data] )
+				RETURN
+				    CALCULATE (
+				        [Preco Mediano],
+				        DATESINPERIOD ( Dim_Calendario[Data], UltimaData, -28, DAY )
+				    )
+		formatString: "R$ "#,0.000
+		lineageTag: 153ee6e8-d758-4f42-9d50-82e11c475e65
+		displayFolder: 04 Tempo
+
+	measure 'Preco no Inicio do Periodo' =
+				VAR PrimeiraSemana =
+				    CALCULATE ( MIN ( Dim_Calendario[InicioSemana] ), ALLSELECTED ( Dim_Calendario ) )
+				RETURN
+				    CALCULATE (
+				        [Preco Mediano],
+				        ALLSELECTED ( Dim_Calendario ),
+				        Dim_Calendario[InicioSemana] = PrimeiraSemana
+				    )
+		formatString: "R$ "#,0.000
+		lineageTag: e833058e-b0a2-48bf-beb8-e0e022d9a974
+		displayFolder: 04 Tempo
+
+	measure 'Preco no Fim do Periodo' =
+				VAR UltimaSemana =
+				    CALCULATE ( MAX ( Dim_Calendario[InicioSemana] ), ALLSELECTED ( Dim_Calendario ) )
+				RETURN
+				    CALCULATE (
+				        [Preco Mediano],
+				        ALLSELECTED ( Dim_Calendario ),
+				        Dim_Calendario[InicioSemana] = UltimaSemana
+				    )
+		formatString: "R$ "#,0.000
+		lineageTag: 0fbdccc1-2119-45f5-85ac-1aba5a6be273
+		displayFolder: 04 Tempo
+
+	measure 'Variacao no Periodo RS' =
+				VAR Ini = [Preco no Inicio do Periodo]
+				VAR Fim = [Preco no Fim do Periodo]
+				RETURN
+				    IF ( NOT ISBLANK ( Ini ) && NOT ISBLANK ( Fim ), Fim - Ini )
+		formatString: "R$ "#,0.000
+		lineageTag: 2831db9e-7e56-4f0e-9061-e2b02153364c
+		displayFolder: 04 Tempo
+
+	measure 'Variacao no Periodo %' =
+				DIVIDE ( [Variacao no Periodo RS], [Preco no Inicio do Periodo] )
+		formatString: 0.0%
+		lineageTag: 69e9fcea-c2ea-47eb-98fc-ec815f493ca8
+		displayFolder: 04 Tempo
+
+	measure 'Variacao Nacional RS' =
+				CALCULATE ( [Variacao no Periodo RS], REMOVEFILTERS ( Dim_Geografia ) )
+		formatString: "R$ "#,0.000
+		lineageTag: 9f45dea5-5044-4722-9b0b-29a2dcfa7fd2
+		displayFolder: 05 Transmissao
+
+	measure 'Transmissao vs Nacional %' =
+				VAR Local = [Variacao no Periodo RS]
+				VAR Nacional = [Variacao Nacional RS]
+				RETURN
+				    IF (
+				        NOT ISBLANK ( Local ) && ABS ( Nacional ) > 0.01,
+				        DIVIDE ( Local, Nacional )
+				    )
+		formatString: 0%
+		lineageTag: 7a10a87c-aa97-44c7-a867-6a2381af6e7a
+		displayFolder: 05 Transmissao
+
+	measure 'Descolamento vs Nacional RS' =
+				VAR Local = [Variacao no Periodo RS]
+				VAR Nacional = [Variacao Nacional RS]
+				RETURN
+				    IF ( NOT ISBLANK ( Local ) && NOT ISBLANK ( Nacional ), Local - Nacional )
+		formatString: "R$ "#,0.000
+		lineageTag: b4dfe195-7bc0-4fbc-994a-0f42cca663ef
+		displayFolder: 05 Transmissao
+
+	measure 'Premio vs Nacional %' =
+				VAR Local = [Preco Mediano]
+				VAR Nacional = CALCULATE ( [Preco Mediano], REMOVEFILTERS ( Dim_Geografia ) )
+				RETURN
+				    DIVIDE ( Local - Nacional, Nacional )
+		formatString: 0.0%
+		lineageTag: 604098a8-2581-4b8e-9225-f7d6114c9359
+		displayFolder: 05 Transmissao
+
+	measure 'Preco Mediano Gasolina' =
+				CALCULATE (
+				    [Preco Mediano],
+				    REMOVEFILTERS ( Dim_Produto ),
+				    Dim_Produto[NomeProduto] = "Gasolina"
+				)
+		formatString: "R$ "#,0.000
+		lineageTag: 208dd28e-dcc3-4b95-9184-6be2a2d3dd56
+		displayFolder: 06 Paridade
+
+	measure 'Preco Mediano Etanol' =
+				CALCULATE (
+				    [Preco Mediano],
+				    REMOVEFILTERS ( Dim_Produto ),
+				    Dim_Produto[NomeProduto] = "Etanol"
+				)
+		formatString: "R$ "#,0.000
+		lineageTag: 87885ebd-269c-4be3-9df5-4347b846d20a
+		displayFolder: 06 Paridade
+
+	measure 'Paridade Etanol/Gasolina' =
+				DIVIDE ( [Preco Mediano Etanol], [Preco Mediano Gasolina] )
+		formatString: 0.0%
+		lineageTag: 5a240117-58f0-4302-a1d4-a14cfac7ff69
+		displayFolder: 06 Paridade
+
+	measure 'Etanol Compensa' =
+				VAR Paridade = [Paridade Etanol/Gasolina]
+				RETURN
+				    IF ( NOT ISBLANK ( Paridade ), IF ( Paridade < 0.70, 1, 0 ) )
+		formatString: 0
+		lineageTag: 521e7ed4-20b0-4970-8f37-78f1fb7fce15
+		displayFolder: 06 Paridade
+
+	measure '% Semanas Etanol Compensa' =
+				VAR SemanasComDados =
+				    FILTER (
+				        VALUES ( Dim_Calendario[InicioSemana] ),
+				        NOT ISBLANK ( [Paridade Etanol/Gasolina] )
+				    )
+				VAR SemanasFavoraveis =
+				    FILTER ( SemanasComDados, [Paridade Etanol/Gasolina] < 0.70 )
+				RETURN
+				    DIVIDE ( COUNTROWS ( SemanasFavoraveis ), COUNTROWS ( SemanasComDados ) )
+		formatString: 0.0%
+		lineageTag: f702f0aa-6497-44b2-b184-09bb2dfe8ef5
+		displayFolder: 06 Paridade
+
+	measure 'Vantagem Etanol RS por km' =
+				VAR Etanol = [Preco Mediano Etanol]
+				VAR Gasolina = [Preco Mediano Gasolina]
+				VAR EtanolCorrigido = DIVIDE ( Etanol, 0.70 )
+				RETURN
+				    IF (
+				        NOT ISBLANK ( Etanol ) && NOT ISBLANK ( Gasolina ),
+				        Gasolina - EtanolCorrigido
+				    )
+		formatString: "R$ "#,0.000
+		lineageTag: 4a8eb7a3-274a-4677-8df2-4258cc24e44c
+		displayFolder: 06 Paridade
+
+	measure 'N Eventos de Preco' =
+				COUNTROWS ( Fato_Evento_Preco )
+		formatString: #,0
+		lineageTag: 079ae9aa-e429-481b-b5ae-054405c16755
+		displayFolder: 07 Eventos
+
+	measure 'Maior Alta RS' =
+				CALCULATE ( MAX ( Fato_Evento_Preco[DeltaRS] ), Fato_Evento_Preco[Direcao] = "Alta" )
+		formatString: "R$ "#,0.000
+		lineageTag: e7633eb6-5da0-4f8b-8060-646a78e82e4d
+		displayFolder: 07 Eventos
+
+	measure 'Maior Baixa RS' =
+				CALCULATE ( MIN ( Fato_Evento_Preco[DeltaRS] ), Fato_Evento_Preco[Direcao] = "Baixa" )
+		formatString: "R$ "#,0.000
+		lineageTag: 8c861652-05d2-4dee-a611-1042fa64541e
+		displayFolder: 07 Eventos
+
+	measure 'Data do Ultimo Evento' =
+				CALCULATE ( MAX ( Fato_Evento_Preco[Data] ), ALLSELECTED ( Dim_Calendario ) )
+		formatString: dd/mm/yyyy
+		lineageTag: 00f3742b-ec9e-4dcb-badb-85bda91d80fd
+		displayFolder: 07 Eventos
+
+	measure 'Impacto Acumulado dos Eventos RS' =
+				SUMX ( Fato_Evento_Preco, Fato_Evento_Preco[DeltaRS] )
+		formatString: "R$ "#,0.000
+		lineageTag: 193b8dbd-3e56-4464-bc84-dc4b4945df88
+		displayFolder: 07 Eventos
+
+	measure '% do Movimento Explicado por Eventos' =
+				DIVIDE ( [Impacto Acumulado dos Eventos RS], [Variacao no Periodo RS] )
+		formatString: 0.0%
+		lineageTag: 0eb9ec3f-26a4-4a84-b351-874fc3a9985f
+		displayFolder: 07 Eventos
+
+	measure 'Ranking UF por Preco' =
+				IF (
+				    NOT ISBLANK ( [Preco Mediano] ),
+				    RANKX ( ALLSELECTED ( Dim_Geografia[UF] ), [Preco Mediano], , DESC, DENSE )
+				)
+		formatString: #,0
+		lineageTag: 0511deee-5319-459a-b0ca-a8dc93b0b887
+		displayFolder: 08 Apoio
+
+	measure 'Ranking UF por Dispersao' =
+				IF (
+				    NOT ISBLANK ( [Amplitude P90-P10] ),
+				    RANKX ( ALLSELECTED ( Dim_Geografia[UF] ), [Amplitude P90-P10], , DESC, DENSE )
+				)
+		formatString: #,0
+		lineageTag: 70d3bb12-eb5b-409c-8a57-6f72e647662e
+		displayFolder: 08 Apoio
+
+	measure 'Titulo Dinamico' =
+				VAR Produto = SELECTEDVALUE ( Dim_Produto[NomeProduto], "Todos os combustiveis" )
+				VAR Ini = MIN ( Dim_Calendario[Data] )
+				VAR Fim = MAX ( Dim_Calendario[Data] )
+				VAR Regiao = SELECTEDVALUE ( Dim_Geografia[NomeRegiao], "Brasil" )
+				RETURN
+				    Produto & " - " & Regiao & " - "
+				        & FORMAT ( Ini, "mmm/yy" ) & " a " & FORMAT ( Fim, "mmm/yy" )
+		lineageTag: 22add9d2-3533-487f-9ed8-454bb8fc7661
+		displayFolder: 08 Apoio
+
+	measure 'Base da Amostra' =
+				VAR N = [Coletas]
+				VAR Postos = [Postos Distintos]
+				RETURN
+				    IF (
+				        N > 0,
+				        FORMAT ( N, "#,0" ) & " coletas em "
+				            & FORMAT ( Postos, "#,0" ) & " postos"
+				    )
+		lineageTag: b9ba19d7-5bbe-4d2c-a4c6-b416ddb2307e
+		displayFolder: 08 Apoio
+
+	measure 'Sentido da Variacao' =
+				VAR V = [Variacao no Periodo RS]
+				RETURN
+				    SWITCH (
+				        TRUE (),
+				        ISBLANK ( V ), BLANK (),
+				        V > 0.01, "Alta",
+				        V < -0.01, "Baixa",
+				        "Estavel"
+				    )
+		lineageTag: 040b4522-2f31-485f-9498-00bea400f143
+		displayFolder: 08 Apoio
+
+	column Coluna1
+		dataType: string
+		isHidden
+		lineageTag: 2d9d2a4d-9b3c-48f3-ba88-3f7035c580ed
+		summarizeBy: none
+		sourceColumn: Coluna1
+
+	partition _Medidas = m
+		mode: import
+		source =
+				let
+				    Origem = Table.FromRows({}, type table [Coluna1 = text])
+				in
+				    Origem

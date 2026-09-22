@@ -1,0 +1,27 @@
+relationship 1e8602d7-264b-44ca-8970-d46b6716cf04
+	fromColumn: Fato_Coleta.Data
+	toColumn: Dim_Calendario.Data
+
+relationship d6744d07-bf19-49d1-a184-435adcecf34b
+	fromColumn: Fato_Coleta.SK_Produto
+	toColumn: Dim_Produto.SK_Produto
+
+relationship 816d9dce-7b43-40f3-a45a-dbc2a59b6645
+	fromColumn: Fato_Coleta.SK_Municipio
+	toColumn: Dim_Geografia.SK_Municipio
+
+relationship 82840c95-3944-4527-af0f-e3e268a87fcd
+	fromColumn: Fato_Coleta.SK_Bandeira
+	toColumn: Dim_Bandeira.SK_Bandeira
+
+relationship 3ce6a622-10b0-4e4d-8992-b8627c08d86e
+	fromColumn: Fato_Coleta.SK_Revenda
+	toColumn: Dim_Revenda.SK_Revenda
+
+relationship b7857561-5af4-4e0d-92fb-16418ad2f4cc
+	fromColumn: Fato_Evento_Preco.Data
+	toColumn: Dim_Calendario.Data
+
+relationship ac7bb2bf-f6eb-4633-8fba-7ed4a35349a9
+	fromColumn: Fato_Evento_Preco.SK_Produto
+	toColumn: Dim_Produto.SK_Produto

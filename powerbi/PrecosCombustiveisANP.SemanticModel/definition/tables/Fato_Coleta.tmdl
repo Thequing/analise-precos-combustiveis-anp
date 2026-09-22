@@ -1,0 +1,55 @@
+table Fato_Coleta
+	lineageTag: 6eac067f-e231-4fc8-b860-135b34b1b151
+
+	column Data
+		dataType: dateTime
+		isHidden
+		lineageTag: b8747353-6b35-460e-9bb9-aca5356f783a
+		summarizeBy: none
+		sourceColumn: Data
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column SK_Produto
+		dataType: int64
+		isHidden
+		lineageTag: 799d36f9-8a9c-4b2a-a78f-d226fb320a1e
+		summarizeBy: none
+		sourceColumn: SK_Produto
+
+	column SK_Municipio
+		dataType: int64
+		isHidden
+		lineageTag: 6131ad4b-d612-416c-8586-b1e0d9f61f91
+		summarizeBy: none
+		sourceColumn: SK_Municipio
+
+	column SK_Bandeira
+		dataType: int64
+		isHidden
+		lineageTag: 6d93f159-64b5-4b13-8f68-ce5bb641a97e
+		summarizeBy: none
+		sourceColumn: SK_Bandeira
+
+	column SK_Revenda
+		dataType: int64
+		isHidden
+		lineageTag: ad5246af-3058-4ed7-991a-ebf749cdb507
+		summarizeBy: none
+		sourceColumn: SK_Revenda
+
+	column Preco
+		dataType: double
+		lineageTag: b45a76f2-9462-422a-9df1-c4878ed52720
+		summarizeBy: none
+		sourceColumn: Preco
+
+	partition Fato_Coleta = m
+		mode: import
+		source =
+				let
+				    Origem = Csv.Document(File.Contents(pCaminhoDados & "\Fato_Coleta.csv"), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    Promovido = Table.PromoteHeaders(Origem, [PromoteAllScalars=true]),
+				    Tipos = Table.TransformColumnTypes(Promovido, {{"Data", type date},{"SK_Produto", Int64.Type},{"SK_Municipio", Int64.Type},{"SK_Bandeira", Int64.Type},{"SK_Revenda", Int64.Type},{"Preco", type number}}, "en-US")
+				in
+				    Tipos

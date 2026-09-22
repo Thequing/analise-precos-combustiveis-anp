@@ -1,0 +1,23 @@
+model Model
+	culture: pt-BR
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: pt-BR
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+	annotation PBI_QueryOrder = ["Dim_Calendario", "Dim_Produto", "Dim_Geografia", "Dim_Bandeira", "Dim_Revenda", "Fato_Coleta", "Fato_Evento_Preco", "_Medidas"]
+
+	annotation PBI_ProTooling = ["DevMode"]
+
+ref table Dim_Calendario
+ref table Dim_Produto
+ref table Dim_Geografia
+ref table Dim_Bandeira
+ref table Dim_Revenda
+ref table Fato_Coleta
+ref table Fato_Evento_Preco
+ref table _Medidas
+
+ref expression pCaminhoDados

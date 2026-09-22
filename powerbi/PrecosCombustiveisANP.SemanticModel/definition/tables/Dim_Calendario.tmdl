@@ -1,0 +1,122 @@
+table Dim_Calendario
+	dataCategory: Time
+	lineageTag: cf1a5651-c1b8-4d42-a115-fa5608614724
+
+	column Data
+		dataType: dateTime
+		isKey
+		lineageTag: a06d2142-55d3-430f-bd14-e4e3d1b428e7
+		summarizeBy: none
+		sourceColumn: Data
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Ano
+		dataType: int64
+		lineageTag: f2eed8d4-cf2c-449d-92e7-7ec59e4670a5
+		summarizeBy: none
+		sourceColumn: Ano
+
+	column Mes
+		dataType: int64
+		isHidden
+		lineageTag: 5a8fb0b7-2526-4bf0-9ded-f09bb97d782d
+		summarizeBy: none
+		sourceColumn: Mes
+
+	column NomeMes
+		dataType: string
+		lineageTag: ef532208-7cf1-4462-a786-6051cb553b5a
+		summarizeBy: none
+		sourceColumn: NomeMes
+		sortByColumn: Mes
+
+	column AnoMes
+		dataType: int64
+		isHidden
+		lineageTag: f7ab70f2-a06d-4dba-891f-281b09cc7efd
+		summarizeBy: none
+		sourceColumn: AnoMes
+
+	column AnoMesNome
+		dataType: string
+		lineageTag: 15dc83db-0ee8-415b-b665-6f4daa29b437
+		summarizeBy: none
+		sourceColumn: AnoMesNome
+		sortByColumn: AnoMes
+
+	column Trimestre
+		dataType: string
+		lineageTag: 5701b09d-7550-4127-b4f1-caeebb796e44
+		summarizeBy: none
+		sourceColumn: Trimestre
+
+	column AnoTrimestre
+		dataType: string
+		lineageTag: c11d6a46-5cb2-4fa9-943c-e3767c1f62b4
+		summarizeBy: none
+		sourceColumn: AnoTrimestre
+
+	column SemanaISO
+		dataType: int64
+		lineageTag: fdc6cbda-7eef-4af5-b495-21206dd184cc
+		summarizeBy: none
+		sourceColumn: SemanaISO
+
+	column AnoSemanaISO
+		dataType: int64
+		isHidden
+		lineageTag: 96211457-70a4-45e5-a40f-e5c235360247
+		summarizeBy: none
+		sourceColumn: AnoSemanaISO
+
+	column InicioSemana
+		dataType: dateTime
+		lineageTag: 73422b30-9af8-4bca-bf46-194b6a16139c
+		summarizeBy: none
+		sourceColumn: InicioSemana
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column DiaSemanaNum
+		dataType: int64
+		isHidden
+		lineageTag: 548e155d-b809-40fb-85cf-4cd1e6647fd1
+		summarizeBy: none
+		sourceColumn: DiaSemanaNum
+
+	column NomeDiaSemana
+		dataType: string
+		lineageTag: 9cd6e901-5162-4d54-a9d2-6dbe46ee1102
+		summarizeBy: none
+		sourceColumn: NomeDiaSemana
+		sortByColumn: DiaSemanaNum
+
+	column EhFimDeSemana
+		dataType: boolean
+		lineageTag: 2f9fe48d-dfda-4342-acc4-379b31720c93
+		summarizeBy: none
+		sourceColumn: EhFimDeSemana
+
+	column DiasUteisComDados
+		dataType: int64
+		isHidden
+		lineageTag: 478479dc-c56b-4ea4-b58d-9cfcdd9b13fd
+		summarizeBy: none
+		sourceColumn: DiasUteisComDados
+
+	column EhSemanaCompleta
+		dataType: boolean
+		lineageTag: 2bf9ccb6-688a-4e65-b051-4c100f1d1f1f
+		summarizeBy: none
+		sourceColumn: EhSemanaCompleta
+
+	partition Dim_Calendario = m
+		mode: import
+		source =
+				let
+				    Origem = Csv.Document(File.Contents(pCaminhoDados & "\Dim_Calendario.csv"), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    Promovido = Table.PromoteHeaders(Origem, [PromoteAllScalars=true]),
+				    Tipos = Table.TransformColumnTypes(Promovido, {{"Data", type date},{"Ano", Int64.Type},{"Mes", Int64.Type},{"NomeMes", type text},{"AnoMes", Int64.Type},{"AnoMesNome", type text},{"Trimestre", type text},{"AnoTrimestre", type text},{"SemanaISO", Int64.Type},{"AnoSemanaISO", Int64.Type},{"InicioSemana", type date},{"DiaSemanaNum", Int64.Type},{"NomeDiaSemana", type text},{"EhFimDeSemana", type logical},{"DiasUteisComDados", Int64.Type},{"EhSemanaCompleta", type logical}}, "en-US")
+				in
+				    Tipos

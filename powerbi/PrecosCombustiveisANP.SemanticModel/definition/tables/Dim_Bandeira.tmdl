@@ -1,0 +1,37 @@
+table Dim_Bandeira
+	lineageTag: ea4acc8d-baf2-45b2-aeff-4ec7a8d6a02b
+
+	column SK_Bandeira
+		dataType: int64
+		isHidden
+		lineageTag: 46dd5219-136f-45a4-8dfb-f9f9f5714802
+		summarizeBy: none
+		sourceColumn: SK_Bandeira
+
+	column Bandeira
+		dataType: string
+		lineageTag: 14fdc0d6-b6fb-4faf-8498-4f5ca6e20200
+		summarizeBy: none
+		sourceColumn: Bandeira
+
+	column GrupoBandeira
+		dataType: string
+		lineageTag: b2b09242-bac3-471b-a247-e0fec144bdc7
+		summarizeBy: none
+		sourceColumn: GrupoBandeira
+
+	column EhBandeiraBranca
+		dataType: boolean
+		lineageTag: a33085d2-cc00-49e8-b869-a81d81a97c8b
+		summarizeBy: none
+		sourceColumn: EhBandeiraBranca
+
+	partition Dim_Bandeira = m
+		mode: import
+		source =
+				let
+				    Origem = Csv.Document(File.Contents(pCaminhoDados & "\Dim_Bandeira.csv"), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    Promovido = Table.PromoteHeaders(Origem, [PromoteAllScalars=true]),
+				    Tipos = Table.TransformColumnTypes(Promovido, {{"SK_Bandeira", Int64.Type},{"Bandeira", type text},{"GrupoBandeira", type text},{"EhBandeiraBranca", type logical}}, "en-US")
+				in
+				    Tipos

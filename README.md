@@ -49,16 +49,22 @@ ANP (CSV público)
             step02  limpeza, minimização de dados, auditoria
             step03  esquema estrela + integridade referencial
             step04  detecção de eventos (z-score robusto)
-            step05  valores esperados para conferência do DAX
+            step05  suíte de testes DAX (consulta + esperado)
+            step06  dicionário de dados gerado
+            step07  projeto .pbip em TMDL
+            step08  modelo em TMSL (publicação por XMLA)
       |
       v
   data/processed/*.csv   <- 8 tabelas, esquema estrela
       |
       v
-  [Power BI]  Power Query (tipagem explícita)
-              Modelo    (relações 1:N, direção única)
+  [PowerShell]  Deploy-Modelo.ps1     publica + refresh
+                Invoke-TestesDax.ps1  35 testes via ADOMD
+      |
+      v
+  [Power BI]  Modelo    (relações 1:N, direção única)
               DAX       (todo cálculo de negócio)
-              Relatório (3 páginas)
+              Relatório (3 páginas, montadas no Desktop)
 ```
 
 ### Por que essa divisão
@@ -139,21 +145,78 @@ python src/step01_download.py      # ~270 MB, alguns minutos
 python src/step02_clean.py
 python src/step03_build_model.py
 python src/step04_analysis.py
-python src/step05_validate.py
+python src/step05_validate.py      # gera a suite de testes DAX
+python src/step06_dictionary.py
+python src/step07_build_pbip.py    # projeto .pbip (TMDL)
 ```
 
 Cada etapa é idempotente. O download usa cache: rodar de novo não
 rebaixa nada.
 
-Depois, no Power BI Desktop:
+Depois, um comando carrega o modelo no Power BI Desktop e roda os testes:
 
-1. Criar o parâmetro `pCaminhoDados` apontando para `data/processed`
-2. Colar as consultas de [`docs/powerquery/consultas.m`](docs/powerquery/consultas.m)
-3. Marcar `Dim_Calendario` como tabela de datas
-4. Criar as relações
-5. Colar as medidas de [`docs/dax/medidas.dax`](docs/dax/medidas.dax)
-6. Conferir contra [`docs/valores-esperados.md`](docs/valores-esperados.md)
-7. Montar as páginas seguindo [`docs/guia-relatorio.md`](docs/guia-relatorio.md)
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\Deploy-Modelo.ps1 -ComTestes
+```
+
+O script abre o Desktop, descobre a porta da instância local do Analysis
+Services, publica o modelo por XMLA, dispara o refresh e executa a suíte.
+Ao final, `Arquivo > Salvar como` grava o `.pbix` e as páginas são
+montadas seguindo [`docs/guia-relatorio.md`](docs/guia-relatorio.md).
+
+O caminho manual continua documentado — parâmetro, consultas M, relações
+e medidas coladas à mão — em [`docs/guia-relatorio.md`](docs/guia-relatorio.md),
+para quem não puder rodar scripts no ambiente.
+
+> **O caminho scriptado não é o caminho corporativo.** Ele usa o cliente
+> ADOMD que acompanha o Desktop para falar XMLA com a instância local do
+> Analysis Services. Funciona nesta máquina e economiza horas, mas um
+> tenant restrito pode bloquear execução de PowerShell ou o acesso ao
+> workspace local. **O `.pbix` entregue não depende de nada disso** — uma
+> vez salvo, é um arquivo comum. O caminho manual do guia é o que se
+> assume disponível em qualquer ambiente.
+
+### Limitação conhecida: o `.pbip` não abre
+
+`step07_build_pbip.py` gera um projeto `.pbip` com o modelo em TMDL.
+Nesta máquina, o Power BI Desktop 2.157 **abre em branco ao receber esse
+arquivo**, sem mensagem de erro — provavelmente uma opção de recurso de
+prévia desativada, que não consegui confirmar sem acesso à interface.
+
+O TMDL gerado não está validado. O TMSL da etapa 8, que descreve o mesmo
+modelo, **está**: é o que os 35 testes exercitam. Use
+`Deploy-Modelo.ps1` até que a abertura do `.pbip` seja confirmada.
+
+---
+
+## Testes
+
+O modelo semântico é testado, não conferido no olho.
+
+`step05_validate.py` calcula em pandas o valor esperado de cada medida
+**e** a consulta DAX que deve produzi-lo, gravando os dois juntos em
+`docs/testes-dax.json`. `Invoke-TestesDax.ps1` executa as consultas
+contra o modelo carregado e compara.
+
+```
+  35 passaram · 0 falharam · 0 com erro
+```
+
+| Grupo | Testes | O que prova |
+|---|--:|---|
+| Contagens | 3 | Carga completa: 1.053.221 linhas, 11.151 postos |
+| Preço | 3 | Mediana por produto bate com pandas |
+| Dispersão | 3 | P90−P10 bate com pandas |
+| **Guarda** | 3 | RR e AC (15 postos) devolvem **BLANK**, SP devolve valor |
+| **Paridade** | 8 | Inclui invariância: o mesmo resultado sob filtro de Gasolina, Etanol ou Diesel — prova que `REMOVEFILTERS(Dim_Produto)` funciona |
+| Variação | 7 | `ALLSELECTED` delimita o período corretamente |
+| Transmissão | 4 | SP 119%, MS 63% reproduzidos em DAX |
+| Eventos | 4 | 12 eventos, distribuídos por produto |
+
+Os dois grupos em negrito são os que pegam erro de verdade. A guarda de
+amostra e a invariância da paridade dependem de contexto de filtro —
+exatamente onde DAX costuma falhar em silêncio, devolvendo um número
+plausível e errado.
 
 ---
 
