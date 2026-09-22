@@ -7,3 +7,6 @@ __pycache__/
 
 # Saidas geradas por instancia (o ID do banco muda a cada execucao)
 outputs/modelo.tmsl
+
+# Exportacao intermediaria de medidas (regenerada pelo step10)
+outputs/medidas.json

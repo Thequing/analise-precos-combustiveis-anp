@@ -153,39 +153,69 @@ python src/step07_build_pbip.py    # projeto .pbip (TMDL)
 Cada etapa é idempotente. O download usa cache: rodar de novo não
 rebaixa nada.
 
-Depois, um comando carrega o modelo no Power BI Desktop e roda os testes:
+Depois, no Power BI Desktop:
+
+**1. Importe os 7 CSVs pela interface.** `Obter dados > Texto/CSV`, de
+`data/processed`: as 5 dimensões e os 2 fatos. Ignore
+`Aux_Paridade_UF_Semana` — serve só para conferência.
+
+**2. Rode a preparação do modelo:**
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\Deploy-Modelo.ps1 -ComTestes
+powershell -ExecutionPolicy Bypass -File scripts\Preparar-Modelo.ps1 -ComTestes
 ```
 
-O script abre o Desktop, descobre a porta da instância local do Analysis
-Services, publica o modelo por XMLA, dispara o refresh e executa a suíte.
-Ao final, `Arquivo > Salvar como` grava o `.pbix` e as páginas são
-montadas seguindo [`docs/guia-relatorio.md`](docs/guia-relatorio.md).
+**3. `Ctrl+S`** para gravar o `.pbix`, aplique o tema
+(`Exibição > Temas > Procurar`) e monte as páginas seguindo
+[`docs/guia-relatorio.md`](docs/guia-relatorio.md).
 
-O caminho manual continua documentado — parâmetro, consultas M, relações
-e medidas coladas à mão — em [`docs/guia-relatorio.md`](docs/guia-relatorio.md),
-para quem não puder rodar scripts no ambiente.
+### Por que a importação é manual
+
+Porque o Desktop **só salva um modelo que ele mesmo criou**. Publicar o
+modelo inteiro por XMLA funciona — carrega, e os 35 testes passam nele —
+mas o `Salvar como` fica travado para sempre em "Trabalhando nisso".
+
+Com os CSVs importados pela interface, o Desktop é dono do modelo, e o
+script faz só edição granular via TOM. Aí o `.pbix` salva normalmente
+(1,05 milhão de linhas comprimem para **3,3 MB**).
+
+### O que `Preparar-Modelo.ps1` conserta
+
+Não é cosmético. O Desktop erra coisas que quebram a análise em silêncio:
+
+| Problema | Efeito se não corrigir |
+|---|---|
+| `Preco` importado como **Int64** + cultura pt-BR | "6.29" vira **629** — ponto lido como separador de milhar |
+| Mesmo com o M certo, a coluna do modelo segue Int64 | 6,29 é **truncado para 6** na carga |
+| `AnoMesNome` ("Set/24") detectado como **data** | eixo de mês inutilizável, e ganha tabela de data própria |
+| Data/hora automática | 6 tabelas ocultas e 5 relações de lixo |
+| Só 5 das 7 relações detectadas | faltam as duas de `Dim_Calendario[Data]` |
+
+Os três primeiros foram encontrados **pelos testes**, não a olho. É
+exatamente o caso que a suíte existe para pegar: número plausível,
+silenciosamente errado.
 
 > **O caminho scriptado não é o caminho corporativo.** Ele usa o cliente
-> ADOMD que acompanha o Desktop para falar XMLA com a instância local do
-> Analysis Services. Funciona nesta máquina e economiza horas, mas um
-> tenant restrito pode bloquear execução de PowerShell ou o acesso ao
-> workspace local. **O `.pbix` entregue não depende de nada disso** — uma
-> vez salvo, é um arquivo comum. O caminho manual do guia é o que se
-> assume disponível em qualquer ambiente.
+> ADOMD e o TOM que acompanham o Desktop para falar com a instância local
+> do Analysis Services. Economiza horas, mas um tenant restrito pode
+> bloquear execução de PowerShell ou o acesso ao workspace local.
+> **O `.pbix` entregue não depende de nada disso** — uma vez salvo, é um
+> arquivo comum. O caminho 100% manual está em
+> [`docs/guia-relatorio.md`](docs/guia-relatorio.md) e é o que se assume
+> disponível em qualquer ambiente.
 
-### Limitação conhecida: o `.pbip` não abre
+### Tentativas que não deram certo
 
-`step07_build_pbip.py` gera um projeto `.pbip` com o modelo em TMDL.
-Nesta máquina, o Power BI Desktop 2.157 **abre em branco ao receber esse
-arquivo**, sem mensagem de erro — provavelmente uma opção de recurso de
-prévia desativada, que não consegui confirmar sem acesso à interface.
+Registrado porque descartar caminho também é resultado:
 
-O TMDL gerado não está validado. O TMSL da etapa 8, que descreve o mesmo
-modelo, **está**: é o que os 35 testes exercitam. Use
-`Deploy-Modelo.ps1` até que a abertura do `.pbip` seja confirmada.
+| Tentativa | O que aconteceu |
+|---|---|
+| `.pbip` com modelo em TMDL (`step07`) | Desktop 2.157 abre em branco, sem erro. Causa não confirmada. |
+| `.pbit` template (`step09`) | Depois de corrigir o BOM UTF-16 ausente, o Desktop passa a **ler** o arquivo e responde "Não foi possível abrir o modelo". Não investigado até o fim. |
+| Publicar o modelo por XMLA (`step08` + `Deploy-Modelo.ps1`) | Carrega e passa nos 35 testes, mas o Desktop **não salva** — trava em "Trabalhando nisso". |
+
+Todos os três continuam no repositório: o TMSL da etapa 8 é útil para
+testar o modelo sem interface, e foi como a suíte rodou pela primeira vez.
 
 ---
 
