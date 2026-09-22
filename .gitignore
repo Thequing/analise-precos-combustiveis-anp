@@ -15,5 +15,3 @@ outputs/medidas.json
 *.pbix.bak
 *.pbix.tmp
 
-# o .pbix entra no repo so depois de verificado (ver README)
-/Precos-Combustiveis-ANP.pbix
